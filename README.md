@@ -1,1 +1,1 @@
-# PythonProject_ImJeontTaek
+# PythonProject_ImJeongTaek
