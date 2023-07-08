@@ -1,5 +1,5 @@
 import psycopg2
-import re
+from datetime import date
 
 
 # # 데이터베이스에 데이터 추가
@@ -11,6 +11,8 @@ import re
 # )
 #
 # cur = conn.cursor()
+#
+#
 #
 # cur.execute("INSERT INTO Books(book_id, title, author, publisher, loan_available) "
 #             "VALUES (002, '파이썬으로 배우는 알고리즘', '이영희', '정보과학사', TRUE),"
@@ -35,10 +37,10 @@ import re
 
 # cur.execute('''
 # CREATE TABLE Loans (
-# loan_id PRIMARY KEY,
+# loan_id SERIAL PRIMARY KEY,
 # loaned_book_id INTEGER REFERENCES Books(book_id),
 # Loan_date DATE NOT NULL,
-# Return_date DATE NULL))
+# Return_date DATE NULL)
 # ''')
 
 
@@ -62,7 +64,6 @@ def sub_menu():
         library_menu()
     elif sub_choice == '2':
         print('\n수고하셨습니다.')
-        conn.close()
         exit()
     else:
         print('다시 입력해주세요.')
@@ -79,24 +80,76 @@ def book_info(data):
 
     cur = conn.cursor()
     if data.isnumeric():
-        # num_data = re.sub(r'\D', '', data)
         cur.execute(f"SELECT * FROM Books WHERE book_id = {data}")
         selected = cur.fetchall()
-        print('\nID        TITLE         AUTHOR   PUBLISHER   LOAN_AVAILABLE')
-        print(selected)
+        if len(selected) == 0:
+            print('\n없는 ID입니다. 다시 선택해주세요')
+            sub_menu()
+        else:
+            print('\nID        TITLE         AUTHOR   PUBLISHER   LOAN_AVAILABLE')
+            for row in selected:
+                print(row)
+            sub_menu()
     elif data:
         cur.execute(f"SELECT * FROM Books WHERE title LIKE '%{data}%'")
-    selected = cur.fetchall()
-    print('\nID        TITLE         AUTHOR   PUBLISHER   LOAN_AVAILABLE')
-    print(selected)
-
-    sub_menu()
+        selected = cur.fetchall()
+        print('\nID        TITLE         AUTHOR   PUBLISHER   LOAN_AVAILABLE')
+        for row in selected:
+            print(row)
+        sub_menu()
     cur.close()
     conn.close()
 
 
 def loan_book():
-    pass
+    current_date = date.today()
+    conn = psycopg2.connect(
+        host='localhost',
+        dbname='library2',
+        user='user2',
+        password='1234',
+    )
+
+    cur = conn.cursor()
+
+    cur.execute("SELECT * FROM Books WHERE loan_available = TRUE ORDER BY book_id")
+    selected = cur.fetchmany(5)
+    print('-----------------------------------')
+    print('\nID        TITLE         AUTHOR   PUBLISHER   LOAN_AVAILABLE')
+    for row in selected:
+        print(row)
+    data = input('\n대출하고 싶은 책의 ID 또는 제목을 입력하세요. :')
+    if data.isnumeric():
+        cur.execute(f"SELECT book_id FROM Books")
+        book_id = cur.fetchall()
+        if (int(data),) in book_id:
+            cur.execute(f"UPDATE Books SET loan_available = FALSE WHERE book_id={data}")
+            cur.execute(f"INSERT INTO Loans (loaned_book_id, loan_date) VALUES ({data}, current_date)")
+            conn.commit()
+            print('\n대출해주셔서 감사합니다.')
+            sub_menu()
+        else:
+            print('\n없는 ID입니다. 다시 선택해주세요')
+            sub_menu()
+
+    else:
+        cur.execute(f"SELECT title FROM Books")
+        title = cur.fetchall()
+        if (data,) in title:
+            cur.execute(f"UPDATE Books SET loan_available = FALSE WHERE title = '{data}'")
+            cur.execute(f"SELECT book_id FROM Books WHERE loan_available = FALSE")
+            selected = cur.fetchone()
+            cur.execute(f"INSERT INTO Loans (loaned_book_id, loan_date) VALUES ({selected[0]}, current_date)")
+            conn.commit()
+            print('\n대출해주셔서 감사합니다.')
+            sub_menu()
+        else:
+            print('\n없는 ID입니다. 다시 선택해주세요')
+            sub_menu()
+
+    cur.close()
+    conn.close()
+
 
 def return_book():
     pass
