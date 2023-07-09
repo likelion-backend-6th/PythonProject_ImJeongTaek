@@ -102,7 +102,7 @@ def book_info(data):
 
 
 def loan_book():
-    current_date = date.today()
+    # current_date = date.today()
     conn = psycopg2.connect(
         host='localhost',
         dbname='library2',
@@ -152,7 +152,51 @@ def loan_book():
 
 
 def return_book():
-    pass
+    conn = psycopg2.connect(
+        host='localhost',
+        dbname='library2',
+        user='user2',
+        password='1234',
+    )
+
+    cur = conn.cursor()
+    cur.execute("SELECT book_id, title, author, publisher FROM Books WHERE loan_available = FALSE ORDER BY book_id")
+    selected = cur.fetchmany(5)
+    print('-----------------------------------')
+    print('\nID        TITLE         AUTHOR   PUBLISHER')
+    for row in selected:
+        print(row)
+    data = input('\n반납하고 싶은 책의 ID 또는 제목을 입력하세요. :')
+    if data.isnumeric():
+        cur.execute(f"SELECT book_id FROM Books")
+        book_id = cur.fetchall()
+        if (int(data),) in book_id:
+            cur.execute(f"UPDATE Books SET loan_available = TRUE WHERE book_id={data}")
+            cur.execute(f"DELETE FROM Loans WHERE loaned_book_id = {data}")
+            conn.commit()
+            print('\n반납해주셔서 감사합니다.')
+            sub_menu()
+        else:
+            print('\n없는 ID입니다. 다시 선택해주세요')
+            sub_menu()
+
+    else:
+        cur.execute(f"SELECT title FROM Books")
+        title = cur.fetchall()
+        if (data,) in title:
+            cur.execute(f"UPDATE Books SET loan_available = TRUE WHERE title = '{data}'")
+            cur.execute(f"SELECT book_id FROM Books WHERE title = '{data}'")
+            selected = cur.fetchone()
+            cur.execute(f"DELETE FROM Loans WHERE loaned_book_id = {selected[0]}")
+            conn.commit()
+            print('\n대출해주셔서 감사합니다.')
+            sub_menu()
+        else:
+            print('\n없는 ID입니다. 다시 선택해주세요')
+            sub_menu()
+
+    cur.close()
+    conn.close()
 
 
 def is_loaned():
