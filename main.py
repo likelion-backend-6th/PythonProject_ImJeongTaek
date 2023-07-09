@@ -1,5 +1,4 @@
 import psycopg2
-from datetime import date
 
 
 # # 데이터베이스에 데이터 추가
@@ -102,7 +101,6 @@ def book_info(data):
 
 
 def loan_book():
-    # current_date = date.today()
     conn = psycopg2.connect(
         host='localhost',
         dbname='library2',
@@ -209,7 +207,6 @@ def is_loaned():
 
     cur = conn.cursor()
     print('-----------------------------------')
-    # print('\nID        TITLE         AUTHOR   PUBLISHER       loan_date')
     cur.execute(
         "SELECT book_id, title, author, publisher, TO_CHAR(loan_date, 'YYYYMMDD') AS loan_date_number FROM Books JOIN Loans ON Books.book_id = Loans.loaned_book_id")
     rows = cur.fetchall()
