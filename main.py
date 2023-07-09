@@ -200,7 +200,28 @@ def return_book():
 
 
 def is_loaned():
-    pass
+    conn = psycopg2.connect(
+        host='localhost',
+        dbname='library2',
+        user='user2',
+        password='1234',
+    )
+
+    cur = conn.cursor()
+    print('-----------------------------------')
+    # print('\nID        TITLE         AUTHOR   PUBLISHER       loan_date')
+    cur.execute(
+        "SELECT book_id, title, author, publisher, TO_CHAR(loan_date, 'YYYYMMDD') AS loan_date_number FROM Books JOIN Loans ON Books.book_id = Loans.loaned_book_id")
+    rows = cur.fetchall()
+
+    for row in rows:
+        book_id, title, author, publisher, loan_date_number = row
+        print(
+            f"Book ID: {book_id}, Title: {title}, Author: {author}, Publisher: {publisher}, Loan Date: {loan_date_number}")
+
+    sub_menu()
+    cur.close()
+    conn.close()
 
 
 library_menu()
