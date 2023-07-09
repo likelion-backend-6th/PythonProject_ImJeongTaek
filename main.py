@@ -231,7 +231,7 @@ while True:
 
     if choice == 1:
         print('-----------------------------------')
-        info = input(('도서의 ID 혹은 제목을 입력해주세요. : '))
+        info = input('도서의 ID 혹은 제목을 입력해주세요. : ')
         book_info(info)
     elif choice == 2:
         loan_book()
