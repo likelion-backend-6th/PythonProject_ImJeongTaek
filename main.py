@@ -48,10 +48,11 @@ def library_menu():
     print('도서관 관리 시스템 메인 메뉴'.center(30))
     print('-----------------------------------')
     print('1. 도서 정보 조회')
-    print('2. 도서 대출')
-    print('3. 도서 반납')
-    print('4. 대출 정보 조회')
-    print('5. 종료')
+    print('2. 도서 등록')
+    print('3. 도서 대출')
+    print('4. 도서 반납')
+    print('5. 대출 정보 조회')
+    print('6. 종료')
 
 
 def sub_menu():
@@ -96,6 +97,30 @@ def book_info(data):
         for row in selected:
             print(row)
         sub_menu()
+    cur.close()
+    conn.close()
+
+
+def book_registration():
+    conn = psycopg2.connect(
+        host='localhost',
+        dbname='library2',
+        user='user2',
+        password='1234',
+    )
+    cur = conn.cursor()
+
+    print('-----------------------------------')
+    book_id = input('도서의 ID를 입력해주세요. :')
+    title = input('도서의 제목을 입력해주세요. :')
+    author = input('도서의 저자를 입력해주세요. :')
+    publisher = input('도서의 출판사를 입력해주세요. :')
+
+    cur.execute(f"INSERT INTO Books (book_id, title, author, publisher) VALUES ({book_id}, '{title}', '{author}', '{publisher}')")
+    conn.commit()
+
+    print('\n도서 등록을 완료하였습니다.')
+    sub_menu()
     cur.close()
     conn.close()
 
@@ -231,12 +256,14 @@ while True:
         info = input('도서의 ID 혹은 제목을 입력해주세요. : ')
         book_info(info)
     elif choice == 2:
-        loan_book()
+        book_registration()
     elif choice == 3:
-        return_book()
+        loan_book()
     elif choice == 4:
-        is_loaned()
+        return_book()
     elif choice == 5:
+        is_loaned()
+    elif choice == 6:
         print('\n수고하셨습니다.')
         break
     else:
