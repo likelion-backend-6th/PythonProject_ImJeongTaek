@@ -116,13 +116,23 @@ def book_registration():
     author = input('도서의 저자를 입력해주세요. :')
     publisher = input('도서의 출판사를 입력해주세요. :')
 
-    cur.execute(f"INSERT INTO Books (book_id, title, author, publisher) VALUES ({book_id}, '{title}', '{author}', '{publisher}')")
-    conn.commit()
-
-    print('\n도서 등록을 완료하였습니다.')
-    sub_menu()
-    cur.close()
-    conn.close()
+    try:
+        cur.execute(
+            f"INSERT INTO Books (book_id, title, author, publisher) VALUES ({book_id}, '{title}', '{author}', '{publisher}')")
+        conn.commit()
+    except psycopg2.Error as error:
+        if error.pgcode == '23505':
+            print("\n중복된 ID 값입니다.")
+            sub_menu()
+        else:
+            print("다른 오류가 발생했습니다:", error)
+            sub_menu()
+    else:
+        print('\n도서 등록을 완료하였습니다.')
+        sub_menu()
+    finally:
+        cur.close()
+        conn.close()
 
 
 def loan_book():
@@ -233,7 +243,7 @@ def is_loaned():
     cur = conn.cursor()
     print('-----------------------------------')
     cur.execute(
-        "SELECT book_id, title, author, publisher, TO_CHAR(loan_date, 'YYYYMMDD') AS loan_date_number FROM Books JOIN Loans ON Books.book_id = Loans.loaned_book_id")
+        "SELECT book_id, title, author, publisher, TO_CHAR(loan_date, 'YYYYMMDD') AS loan_date_number FROM Books JOIN Loans ON Books.book_id = Loans.loaned_book_id ORDER BY loan_date_number")
     rows = cur.fetchall()
 
     for row in rows:
